@@ -1,0 +1,10 @@
+.vscode/*
+*/*/build
+.vscode/settings.json
+*/venv/*
+*/*/venv/*
+*/*/*/venv/*
+*/*/*/*/venv/*
+*/*/*/*/*/venv/*
+*/*/*/*/*/*/venv/*
+*/*/*/*/*/*/*/venv/*
