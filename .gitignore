@@ -1,6 +1,5 @@
 .vscode/*
-*/*/build
-.vscode/settings.json
+
 */venv/*
 */*/venv/*
 */*/*/venv/*
@@ -8,4 +7,11 @@
 */*/*/*/*/venv/*
 */*/*/*/*/*/venv/*
 */*/*/*/*/*/*/venv/*
-feishu/jsapi/web_app_with_jssdk/python/__pycache__/auth.cpython-312.pyc
+
+*/*/*.pyc
+*/*/*/*.pyc
+*/*/*/*/*.pyc
+*/*/*/*/*/*.pyc
+*/*/*/*/*/*/*.pyc
+*/*/*/*/*/*/*/*.pyc
+*/*/*/*/*/*/*/*/*.pyc

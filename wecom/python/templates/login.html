@@ -1,0 +1,42 @@
+<!-- templates/login.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <script src="https://res.wx.qq.com/open/js/jweixin-1.6.0.js"></script>
+    <script>
+        function getJsApiConfig() {
+            const url = window.location.href.split('#')[0];
+            fetch(`/jsapi_config?url=${encodeURIComponent(url)}`)
+                .then(response => response.json())
+                .then(config => {
+                    wx.config({
+                        beta: true,
+                        debug: false,
+                        appId: config.appId,
+                        timestamp: config.timestamp,
+                        nonceStr: config.nonceStr,
+                        signature: config.signature,
+                        jsApiList: ['checkJsApi', 'onMenuShareTimeline', 'onMenuShareAppMessage']
+                    });
+
+                    wx.ready(function () {
+                        // JSSDK is ready
+                        console.log('WeChat JSSDK is ready');
+                    });
+
+                    wx.error(function (res) {
+                        console.error('WeChat JSSDK error:', res);
+                    });
+                });
+        }
+
+        document.addEventListener('DOMContentLoaded', getJsApiConfig);
+    </script>
+</head>
+<body>
+    <h1>Login with WeChat</h1>
+    <a href="{{ url_for('login') }}">Login</a>
+</body>
+</html>
