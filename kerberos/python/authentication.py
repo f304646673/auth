@@ -5,10 +5,11 @@ from utils import encrypt, decrypt
 
 class Authentication:
         
-    def __init__(self, client_key, ct_session_key = None, tsg_name = None, tgt_period = 60 * 60):
+    def __init__(self, client_key, ct_session_key = None, tsg_name = None, expires = 60 * 60):
         self.client_key = client_key
         self.ct_session_key = ct_session_key
         self.tsg_name = tsg_name
+        self.expires = expires
         
     def generate_request(self, client_id, client_ip, timestamp):
         return f"{client_id},{client_ip},{timestamp}"
@@ -23,7 +24,7 @@ class Authentication:
             return None
         
         # Set TGT validity period (e.g., 1 hour)
-        tgt_validity = int(time.time()) + 3600
+        tgt_validity = int(time.time()) + self.expires
         
         # Generate Ticket Granting Ticket (TGT)
         encrypted_tgt = TicketGrantingServiceTicket(Config.TGS_KEY).generate_tgs_ticket(

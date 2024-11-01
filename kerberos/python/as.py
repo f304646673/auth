@@ -2,13 +2,14 @@
 import socket
 import time
 from config import Config
-import authentication
+from authentication import Authentication
 
 def handle_as_request(client_socket):
     request = client_socket.recv(1024).decode('utf-8')
     print(f"AS Request received: {request}")
     
-    auth = authentication.Authentication(Config.CLIENT_KEY, Config.CLIENT_TO_TGS_SESSION_KEY, Config.TGS_NAME, 60 * 5)
+    expires = 60 * 5
+    auth = Authentication(Config.CLIENT_KEY, Config.CLIENT_TO_TGS_SESSION_KEY, Config.TGS_NAME, expires)
     response = auth.handle_request(request)
     
     print(f"AS Response: {response}")

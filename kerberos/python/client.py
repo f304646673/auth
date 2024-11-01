@@ -3,14 +3,15 @@ import socket
 import time
 from config import Config
 from utils import encrypt, decrypt
-import authentication
+from authentication import Authentication
+from client_to_biz_service_session import ClientToBizServiceSession
 
 def request_tgt(client_id, client_ip, timestamp):
     # Request TGT from AS
     as_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     as_socket.connect(Config.AS_ADDRESS)
     
-    auth = authentication.Authentication(Config.CLIENT_KEY)
+    auth = Authentication(Config.CLIENT_KEY)
     request = auth.generate_request(client_id, client_ip, timestamp)
 
     as_socket.send(request.encode('utf-8'))
@@ -38,12 +39,12 @@ def request_service_ticket(tgt, client_id, session_key, server_name, client_ip):
 def access_service(service_ticket, service_session_key, client_id, client_ip, st_validity):
     # Create Authenticator
     timestamp = str(int(time.time()))
-    authenticator = encrypt(service_session_key, f"{client_id},{client_ip},{timestamp},{st_validity}")
+    session = ClientToBizServiceSession(service_session_key).generate_session(client_id, client_ip, timestamp, st_validity)
 
     # Send Service Ticket and Authenticator to Server
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.connect(Config.SERVER_ADDRESS)
-    server_request = f"{service_ticket},{authenticator}"
+    server_request = f"{service_ticket},{session}"
     server_socket.send(server_request.encode('utf-8'))
     response = server_socket.recv(1024).decode('utf-8')
     server_socket.close()
