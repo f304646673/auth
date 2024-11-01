@@ -1,7 +1,7 @@
 import time
 from utils import encrypt, decrypt
 
-class TicketGrantingBizServiceTicket:
+class BizServiceTicket:
     def __init__(self, server_key):
         self.server_key = server_key
     

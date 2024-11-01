@@ -2,7 +2,7 @@
 import socket
 from config import Config
 from utils import decrypt
-from ticket_granting_biz_service_ticket import TicketGrantingBizServiceTicket
+from biz_service_ticket import BizServiceTicket
 
 def handle_client(client_socket):
     request = client_socket.recv(1024).decode('utf-8')
@@ -11,7 +11,7 @@ def handle_client(client_socket):
     print(f"Service Ticket: {encrypted_service_ticket}, Authenticator: {encrypted_session}")
 
     # Decrypt Service Ticket
-    client_id, client_ip, server_name, timestamp, st_timestamp, cs_sk = TicketGrantingBizServiceTicket(Config.SERVER_KEY).parse_tgs_ticket(encrypted_service_ticket)
+    client_id, client_ip, server_name, timestamp, st_timestamp, cs_sk = BizServiceTicket(Config.SERVER_KEY).parse_tgs_ticket(encrypted_service_ticket)
 
     # Decrypt Authenticator
     decrypted_authenticator = decrypt(cs_sk, encrypted_session)
