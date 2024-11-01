@@ -21,7 +21,7 @@ def handle_tgs_request(client_socket):
         return
     
     # Decrypt TGT
-    client_id_from_ticket_granting_service_ticket, client_ip_from_ticket_granting_service_ticket, \
+    client_name_from_ticket_granting_service_ticket, client_ip_from_ticket_granting_service_ticket, \
         timestamp_from_ticket_granting_service_ticket, tgs_name_from_ticket_granting_service_ticket, \
         tgt_validity_from_ticket_granting_service_ticket, client_to_tgs_session_key \
         = TicketGrantingServiceTicket(Config.TGS_KEY).parse_tgs_ticket(encrypted_tgt)
@@ -33,12 +33,12 @@ def handle_tgs_request(client_socket):
         client_socket.send("Authentication Failed".encode('utf-8'))
         return
     
-    client_id_from_session, client_ip_from_session, timestamp_from_session \
+    client_name_from_session, client_ip_from_session, timestamp_from_session \
         = ClientToTicketGrantingServiceSession(client_to_tgs_session_key).parse_session(encrypted_session)
     
-    if client_id_from_ticket_granting_service_ticket != client_id_from_session or client_ip_from_ticket_granting_service_ticket != client_ip_from_session or timestamp_from_ticket_granting_service_ticket != timestamp_from_session:
-        print(f"Client ID: {client_id_from_ticket_granting_service_ticket}, Client IP: {client_ip_from_ticket_granting_service_ticket}, Timestamp: {timestamp_from_ticket_granting_service_ticket}")
-        print(f"Client ID: {client_id_from_session}, Client IP: {client_ip_from_session}, Timestamp: {timestamp_from_session}")
+    if client_name_from_ticket_granting_service_ticket != client_name_from_session or client_ip_from_ticket_granting_service_ticket != client_ip_from_session or timestamp_from_ticket_granting_service_ticket != timestamp_from_session:
+        print(f"Client ID: {client_name_from_ticket_granting_service_ticket}, Client IP: {client_ip_from_ticket_granting_service_ticket}, Timestamp: {timestamp_from_ticket_granting_service_ticket}")
+        print(f"Client ID: {client_name_from_session}, Client IP: {client_ip_from_session}, Timestamp: {timestamp_from_session}")
         client_socket.send("Authentication Failed".encode('utf-8'))
         client_socket.close()
         return
@@ -46,7 +46,7 @@ def handle_tgs_request(client_socket):
     st_timestamp = str(int(time.time()) + 60 * 10)
 
     # Generate Service Ticket
-    encrypted_service_ticket = BizServiceTicket(Config.SERVER_KEY).generate_service_ticket(client_id_from_ticket_granting_service_ticket, client_ip_from_ticket_granting_service_ticket, Config.SERVER_NAME, timestamp_from_ticket_granting_service_ticket, st_timestamp, Config.CLIENT_TO_BIZ_SERVICE_SESSION_KEY)
+    encrypted_service_ticket = BizServiceTicket(Config.SERVER_KEY).generate_service_ticket(client_name_from_ticket_granting_service_ticket, client_ip_from_ticket_granting_service_ticket, Config.SERVER_NAME, timestamp_from_ticket_granting_service_ticket, st_timestamp, Config.CLIENT_TO_BIZ_SERVICE_SESSION_KEY)
     
     # Generate Session Context
     encrypted_session = TicketGrantingServiceToClientSession(Config.CLIENT_TO_TGS_SESSION_KEY).generate_session(timestamp_from_ticket_granting_service_ticket, st_timestamp, Config.CLIENT_TO_BIZ_SERVICE_SESSION_KEY)

@@ -16,7 +16,7 @@ class Authentication:
     # Handle the request from the client
     def handle_request(self, request):
         try:
-            client_id, client_ip, timestamp =  ClientToAuthenticationServiceSession().parse_session(request)
+            client_name, client_ip, timestamp =  ClientToAuthenticationServiceSession().parse_session(request)
         except:
             print("Error parsing request from client.Request: ", request)
             return None
@@ -26,7 +26,7 @@ class Authentication:
         
         # Generate Ticket Granting Ticket (TGT)
         encrypted_tgt = TicketGrantingServiceTicket(Config.TGS_KEY).generate_tgs_ticket(
-            client_id, client_ip, timestamp, self.tsg_name, tgt_validity, self.ct_session_key)
+            client_name, client_ip, timestamp, self.tsg_name, tgt_validity, self.ct_session_key)
         
         # Generate Session Context
         encrypted_session = AuthenticationServiceToClientSession(self.client_key).generate_session(

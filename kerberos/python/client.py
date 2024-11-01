@@ -9,12 +9,12 @@ from client_to_authentication_service_session import ClientToAuthenticationServi
 from authentication_service_to_client_session import AuthenticationServiceToClientSession
 from client_to_ticket_granting_service_session import ClientToTicketGrantingServiceSession
 
-def request_ticket_granting_service_ticket(client_id, client_ip, timestamp):
+def request_ticket_granting_service_ticket(client_name, client_ip, timestamp):
     # Request ticket_granting_service_ticket from AS
     as_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     as_socket.connect(Config.AS_ADDRESS)
     
-    request = ClientToAuthenticationServiceSession().generate_session(client_id, client_ip, timestamp)
+    request = ClientToAuthenticationServiceSession().generate_session(client_name, client_ip, timestamp)
     as_socket.send(request.encode('utf-8'))
     response = as_socket.recv(1024).decode('utf-8')
     
@@ -23,10 +23,10 @@ def request_ticket_granting_service_ticket(client_id, client_ip, timestamp):
     
     return Authentication(Config.CLIENT_KEY).parse_response(response)
 
-def request_service_ticket(ticket_granting_service_ticket, client_id, session_key, server_name, client_ip):
+def request_service_ticket(ticket_granting_service_ticket, client_name, session_key, server_name, client_ip):
     # Create Authenticator
     timestamp = str(int(time.time()))
-    session = ClientToTicketGrantingServiceSession(session_key).generate_session(client_id, client_ip, timestamp)
+    session = ClientToTicketGrantingServiceSession(session_key).generate_session(client_name, client_ip, timestamp)
 
     # Request Service Ticket from TGS
     tgs_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -40,10 +40,10 @@ def request_service_ticket(ticket_granting_service_ticket, client_id, session_ke
     print(f"Received Service Ticket response: {response}")
     return response
 
-def access_biz_service(biz_service_ticket, service_session_key, client_id, client_ip, st_validity):
+def access_biz_service(biz_service_ticket, service_session_key, client_name, client_ip, st_validity):
     # Create Authenticator
     timestamp = str(int(time.time()))
-    session = ClientToBizServiceSession(service_session_key).generate_session(client_id, client_ip, timestamp, st_validity)
+    session = ClientToBizServiceSession(service_session_key).generate_session(client_name, client_ip, timestamp, st_validity)
 
     # Send Service Ticket and Authenticator to Server
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -58,12 +58,12 @@ def access_biz_service(biz_service_ticket, service_session_key, client_id, clien
     return response
 
 def main():
-    client_id = "client1"
+    client_name = "client1"
     client_ip = "192.168.1.100"  # Replace with actual client IP
     timestamp = str(int(time.time()))
 
     # Step 1: Request ticket_granting_service_ticket from AS
-    encrypted_ticket_granting_service_ticket, timestamp, ct_session_key = request_ticket_granting_service_ticket(client_id, client_ip, timestamp)
+    encrypted_ticket_granting_service_ticket, timestamp, ct_session_key = request_ticket_granting_service_ticket(client_name, client_ip, timestamp)
 
     # Check if the timestamp is within the acceptable range (e.g., 5 minutes)
     current_time = int(time.time())
@@ -72,7 +72,7 @@ def main():
         return
 
     # Step 2: Request Service Ticket from TGS
-    service_ticket_response = request_service_ticket(encrypted_ticket_granting_service_ticket, client_id, ct_session_key, Config.SERVER_NAME, client_ip)
+    service_ticket_response = request_service_ticket(encrypted_ticket_granting_service_ticket, client_name, ct_session_key, Config.SERVER_NAME, client_ip)
     print(f"Received Service Ticket response: {service_ticket_response}")
     biz_service_ticket, encrypted_response = service_ticket_response.split(',')
 
@@ -82,7 +82,7 @@ def main():
     print(f"Decrypted response: service_session_key={service_session_key}, response_timestamp={response_timestamp}, st_validity={st_validity}")
 
     # Step 3: Access the service
-    server_response = access_biz_service(biz_service_ticket, service_session_key, client_id, client_ip, st_validity)
+    server_response = access_biz_service(biz_service_ticket, service_session_key, client_name, client_ip, st_validity)
     print(f"Final Server response: {server_response}")
 
 if __name__ == "__main__":
