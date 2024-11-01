@@ -3,17 +3,22 @@ import socket
 import time
 from config import Config
 from utils import encrypt, decrypt
+import authentication
 
 def request_tgt(client_id, client_ip, timestamp):
     # Request TGT from AS
     as_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     as_socket.connect(Config.AS_ADDRESS)
-    request = f"{client_id},{client_ip},{timestamp}"
+    
+    auth = authentication.Authentication(Config.CLIENT_KEY)
+    request = auth.generate_request(client_id, client_ip, timestamp)
+
     as_socket.send(request.encode('utf-8'))
     response = as_socket.recv(1024).decode('utf-8')
     as_socket.close()
     print(f"Received TGT response: {response}")
-    return response
+    
+    return auth.parse_request(response)
 
 def request_service_ticket(tgt, client_id, session_key, server_name, client_ip):
     # Create Authenticator
@@ -51,27 +56,21 @@ def main():
     timestamp = str(int(time.time()))
 
     # Step 1: Request TGT from AS
-    tgt_response = request_tgt(client_id, client_ip, timestamp)
-    encrypted_tgt, encrypted_session = tgt_response.split(',')
-
-    # Decrypt the second part of the response using the client key
-    decrypted_session = decrypt(Config.CLIENT_KEY, encrypted_session)
-    tgs_name, tgt_validity, response_timestamp, session_key = decrypted_session.split(',')
-    print(f"Decrypted session: tgs_name={tgs_name}, tgt_validity={tgt_validity}, response_timestamp={response_timestamp}, session_key={session_key}")
+    encrypted_tgt, timestamp, ct_session_key = request_tgt(client_id, client_ip, timestamp)
 
     # Check if the timestamp is within the acceptable range (e.g., 5 minutes)
     current_time = int(time.time())
-    if int(response_timestamp) < current_time:
+    if int(timestamp) < current_time:
         print("Timestamp difference is greater than 5 minutes. Authentication failed.")
         return
 
     # Step 2: Request Service Ticket from TGS
-    service_ticket_response = request_service_ticket(encrypted_tgt, client_id, session_key, Config.SERVER_NAME, client_ip)
+    service_ticket_response = request_service_ticket(encrypted_tgt, client_id, ct_session_key, Config.SERVER_NAME, client_ip)
     print(f"Received Service Ticket response: {service_ticket_response}")
     service_ticket, encrypted_response = service_ticket_response.split(',')
 
     # Decrypt the second part of the response using the session key
-    decrypted_response = decrypt(session_key, encrypted_response)
+    decrypted_response = decrypt(ct_session_key, encrypted_response)
     response_timestamp, st_validity, service_session_key = decrypted_response.split(',')
     print(f"Decrypted response: service_session_key={service_session_key}, response_timestamp={response_timestamp}, st_validity={st_validity}")
 
