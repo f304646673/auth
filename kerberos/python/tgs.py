@@ -3,6 +3,7 @@ import socket
 import time
 from config import Config
 from ticket_granting_ticket import TicketGrantingTicket
+from ticket_granting_service_ticket import TicketGrantingServiceTicket
 from utils import encrypt, decrypt
 
 def handle_tgs_request(client_socket):
@@ -17,7 +18,7 @@ def handle_tgs_request(client_socket):
         return
     
     # Decrypt TGT
-    client_id, client_ip, timestamp, tgs_name, tgt_validity, client_to_tgs_session_key = TicketGrantingTicket().parse_tgs_ticket(Config.TGS_KEY, encrypted_tgt)
+    client_id, client_ip, timestamp, tgs_name, tgt_validity, client_to_tgs_session_key = TicketGrantingServiceTicket(Config.TGS_KEY).parse_tgs_ticket(encrypted_tgt)
 
     # Check if the timestamp is within the acceptable range (e.g., 5 minutes)
     current_time = int(time.time())
@@ -26,12 +27,12 @@ def handle_tgs_request(client_socket):
         client_socket.send("Authentication Failed".encode('utf-8'))
         return
     
-    decrypted_request = decrypt(client_to_tgs_session_key, encrypted_request)
-    client_id_from_part2, client_ip_from_part2, timestamp_from_part2 = decrypted_request.split(',')
+    decrypted_session = decrypt(client_to_tgs_session_key, encrypted_request)
+    client_id_from_session, client_ip_from_session, timestamp_from_session = decrypted_session.split(',')
     
-    if client_id != client_id_from_part2 or client_ip != client_ip_from_part2 or timestamp != timestamp_from_part2:
+    if client_id != client_id_from_session or client_ip != client_ip_from_session or timestamp != timestamp_from_session:
         print(f"Client ID: {client_id}, Client IP: {client_ip}, Timestamp: {timestamp}")
-        print(f"Client ID: {client_id_from_part2}, Client IP: {client_ip_from_part2}, Timestamp: {timestamp_from_part2}")
+        print(f"Client ID: {client_id_from_session}, Client IP: {client_ip_from_session}, Timestamp: {timestamp_from_session}")
         client_socket.send("Authentication Failed".encode('utf-8'))
         client_socket.close()
         return
@@ -39,7 +40,7 @@ def handle_tgs_request(client_socket):
     st_timestamp = str(int(time.time()) + 60 * 10)
 
     # Generate Service Ticket
-    encrypted_service_ticket = TicketGrantingTicket().generate_service_ticket(Config.SERVER_KEY, client_id, client_ip, Config.SERVER_NAME, timestamp, st_timestamp, Config.CLIENT_TO_SERVER_SESSION_KEY)
+    encrypted_service_ticket = TicketGrantingTicket(Config.SERVER_KEY).generate_service_ticket(client_id, client_ip, Config.SERVER_NAME, timestamp, st_timestamp, Config.CLIENT_TO_SERVER_SESSION_KEY)
     
     session_content = f"{timestamp},{st_timestamp},{Config.CLIENT_TO_SERVER_SESSION_KEY}"
     encrypted_session = encrypt(Config.CLIENT_TO_TGS_SESSION_KEY, session_content)

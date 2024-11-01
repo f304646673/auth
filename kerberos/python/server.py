@@ -11,7 +11,7 @@ def handle_client(client_socket):
     print(f"Service Ticket: {encrypted_service_ticket}, Authenticator: {encrypted_session}")
 
     # Decrypt Service Ticket
-    client_id, client_ip, server_name, timestamp, st_timestamp, cs_sk = TicketGrantingTicket().parse_tgs_ticket(Config.SERVER_KEY, encrypted_service_ticket)
+    client_id, client_ip, server_name, timestamp, st_timestamp, cs_sk = TicketGrantingTicket(Config.SERVER_KEY).parse_tgs_ticket(encrypted_service_ticket)
 
     # Decrypt Authenticator
     decrypted_authenticator = decrypt(cs_sk, encrypted_session)
