@@ -8,8 +8,9 @@ from client_to_biz_service_session import ClientToBizServiceSession
 from client_to_authentication_service_session import ClientToAuthenticationServiceSession
 from authentication_service_to_client_session import AuthenticationServiceToClientSession
 from client_to_ticket_granting_service_session import ClientToTicketGrantingServiceSession
+from ticket_granting_service_to_client_session import TicketGrantingServiceToClientSession
 
-def request_ticket_granting_service_ticket(client_name, client_ip, timestamp):
+def access_authentication_service(client_name, client_ip, timestamp):
     # Request ticket_granting_service_ticket from AS
     as_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     as_socket.connect(Config.AS_ADDRESS)
@@ -23,22 +24,37 @@ def request_ticket_granting_service_ticket(client_name, client_ip, timestamp):
     
     return Authentication(Config.CLIENT_KEY).parse_response(response)
 
-def request_service_ticket(ticket_granting_service_ticket, client_name, session_key, server_name, client_ip):
+def access_ticket_granting_service(ticket_granting_service_ticket, client_name, client_to_tgs_session_key, server_ip, client_ip):
     # Create Authenticator
     timestamp = str(int(time.time()))
-    session = ClientToTicketGrantingServiceSession(session_key).generate_session(client_name, client_ip, timestamp)
+    session = ClientToTicketGrantingServiceSession(client_to_tgs_session_key).generate_session(client_name, client_ip, timestamp)
 
     # Request Service Ticket from TGS
     tgs_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     tgs_socket.connect(Config.TGS_ADDRESS)
     
-    tgs_request = f"{ticket_granting_service_ticket},{server_name},{session}"
+    tgs_request = f"{ticket_granting_service_ticket},{server_ip},{session}"
     tgs_socket.send(tgs_request.encode('utf-8'))
     response = tgs_socket.recv(1024).decode('utf-8')
     
     tgs_socket.close()
     print(f"Received Service Ticket response: {response}")
-    return response
+    
+    try:
+        encrypted_biz_service_ticket, encrypted_response = response.split(',')
+    except:
+        print("Error parsing response from TGS.Response: ", response)
+        return None, None, None
+    
+    decrypted_response = decrypt(client_to_tgs_session_key, encrypted_response)
+    try:
+        response_timestamp, st_validity, service_session_key = decrypted_response.split(',')
+    except:
+        print("Error parsing decrypted response.Response: ", decrypted_response)
+        return None, None, None
+    
+    return encrypted_biz_service_ticket, service_session_key, st_validity
+    
 
 def access_biz_service(biz_service_ticket, service_session_key, client_name, client_ip, st_validity):
     # Create Authenticator
@@ -63,7 +79,7 @@ def main():
     timestamp = str(int(time.time()))
 
     # Step 1: Request ticket_granting_service_ticket from AS
-    encrypted_ticket_granting_service_ticket, timestamp, ct_session_key = request_ticket_granting_service_ticket(client_name, client_ip, timestamp)
+    encrypted_ticket_granting_service_ticket, timestamp, client_to_tgs_session_key = access_authentication_service(client_name, client_ip, timestamp)
 
     # Check if the timestamp is within the acceptable range (e.g., 5 minutes)
     current_time = int(time.time())
@@ -72,17 +88,10 @@ def main():
         return
 
     # Step 2: Request Service Ticket from TGS
-    service_ticket_response = request_service_ticket(encrypted_ticket_granting_service_ticket, client_name, ct_session_key, Config.SERVER_NAME, client_ip)
-    print(f"Received Service Ticket response: {service_ticket_response}")
-    biz_service_ticket, encrypted_response = service_ticket_response.split(',')
-
-    # Decrypt the second part of the response using the session key
-    decrypted_response = decrypt(ct_session_key, encrypted_response)
-    response_timestamp, st_validity, service_session_key = decrypted_response.split(',')
-    print(f"Decrypted response: service_session_key={service_session_key}, response_timestamp={response_timestamp}, st_validity={st_validity}")
-
+    encrypted_biz_service_ticket, service_session_key, st_validity = access_ticket_granting_service(encrypted_ticket_granting_service_ticket, client_name, client_to_tgs_session_key, Config.server_ip, client_ip)
+   
     # Step 3: Access the service
-    server_response = access_biz_service(biz_service_ticket, service_session_key, client_name, client_ip, st_validity)
+    server_response = access_biz_service(encrypted_biz_service_ticket, service_session_key, client_name, client_ip, st_validity)
     print(f"Final Server response: {server_response}")
 
 if __name__ == "__main__":

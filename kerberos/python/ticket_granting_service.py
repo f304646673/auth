@@ -12,10 +12,10 @@ from utils import encrypt, decrypt
 def handle_tgs_request(client_socket):
     request = client_socket.recv(1024).decode('utf-8')
     print(f"TGS Request received: {request}")
-    encrypted_tgt, server_name, encrypted_session = request.split(',')
+    encrypted_tgt, server_ip, encrypted_session = request.split(',')
     
-    if server_name != Config.SERVER_NAME:
-        print(f"Server name mismatch. Expected: {Config.SERVER_NAME}, Actual: {server_name}")
+    if server_ip != Config.server_ip:
+        print(f"Server name mismatch. Expected: {Config.server_ip}, Actual: {server_ip}")
         client_socket.send("Authentication Failed".encode('utf-8'))
         client_socket.close()
         return
@@ -46,7 +46,7 @@ def handle_tgs_request(client_socket):
     st_timestamp = str(int(time.time()) + 60 * 10)
 
     # Generate Service Ticket
-    encrypted_service_ticket = BizServiceTicket(Config.SERVER_KEY).generate_service_ticket(client_name_from_ticket_granting_service_ticket, client_ip_from_ticket_granting_service_ticket, Config.SERVER_NAME, timestamp_from_ticket_granting_service_ticket, st_timestamp, Config.CLIENT_TO_BIZ_SERVICE_SESSION_KEY)
+    encrypted_service_ticket = BizServiceTicket(Config.SERVER_KEY).generate_service_ticket(client_name_from_ticket_granting_service_ticket, client_ip_from_ticket_granting_service_ticket, Config.server_ip, timestamp_from_ticket_granting_service_ticket, st_timestamp, Config.CLIENT_TO_BIZ_SERVICE_SESSION_KEY)
     
     # Generate Session Context
     encrypted_session = TicketGrantingServiceToClientSession(Config.CLIENT_TO_TGS_SESSION_KEY).generate_session(timestamp_from_ticket_granting_service_ticket, st_timestamp, Config.CLIENT_TO_BIZ_SERVICE_SESSION_KEY)

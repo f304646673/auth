@@ -12,7 +12,7 @@ def handle_client(client_socket):
     print(f"Service Ticket: {encrypted_service_ticket}, Authenticator: {encrypted_session}")
 
     # Decrypt Service Ticket
-    client_name_from_biz_service_ticket, client_ip_from_biz_service_ticket, server_name_from_biz_service_ticket, \
+    client_name_from_biz_service_ticket, client_ip_from_biz_service_ticket, server_ip_from_biz_service_ticket, \
         timestamp_from_biz_service_ticket, st_timestamp_from_biz_service_ticket, client_to_biz_service_session_key \
             = BizServiceTicket(Config.SERVER_KEY).parse_tgs_ticket(encrypted_service_ticket)
 

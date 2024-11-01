@@ -7,7 +7,7 @@ class Config:
     TGS_KEY = "tgs_secret_key__"  # 16
     AS_NAME = "AS"
     TGS_NAME = "TGS"
-    SERVER_NAME = "BizServer"
+    server_ip = "BizServer"
     AS_ADDRESS = ("localhost", 5000)
     TGS_ADDRESS = ("localhost", 5001)
     SERVER_ADDRESS = ("localhost", 5002)
