@@ -2,8 +2,9 @@
 import socket
 import time
 from config import Config
-from ticket_granting_ticket import TicketGrantingTicket
+from ticket_granting_biz_service_ticket import TicketGrantingBizServiceTicket
 from ticket_granting_service_ticket import TicketGrantingServiceTicket
+from ticket_granting_service_to_client_session import TicketGrantingServiceToClientSession
 from utils import encrypt, decrypt
 
 def handle_tgs_request(client_socket):
@@ -40,10 +41,10 @@ def handle_tgs_request(client_socket):
     st_timestamp = str(int(time.time()) + 60 * 10)
 
     # Generate Service Ticket
-    encrypted_service_ticket = TicketGrantingTicket(Config.SERVER_KEY).generate_service_ticket(client_id, client_ip, Config.SERVER_NAME, timestamp, st_timestamp, Config.CLIENT_TO_SERVER_SESSION_KEY)
+    encrypted_service_ticket = TicketGrantingBizServiceTicket(Config.SERVER_KEY).generate_service_ticket(client_id, client_ip, Config.SERVER_NAME, timestamp, st_timestamp, Config.CLIENT_TO_BIZ_SERVICE_SESSION_KEY)
     
-    session_content = f"{timestamp},{st_timestamp},{Config.CLIENT_TO_SERVER_SESSION_KEY}"
-    encrypted_session = encrypt(Config.CLIENT_TO_TGS_SESSION_KEY, session_content)
+    # Generate Session Context
+    encrypted_session = TicketGrantingServiceToClientSession(Config.CLIENT_TO_TGS_SESSION_KEY).generate_session(timestamp, st_timestamp, Config.CLIENT_TO_BIZ_SERVICE_SESSION_KEY)
     print("session_key:", Config.CLIENT_TO_TGS_SESSION_KEY)
 
     response = f'{encrypted_service_ticket},{encrypted_session}'

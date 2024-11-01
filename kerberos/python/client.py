@@ -5,23 +5,24 @@ from config import Config
 from utils import encrypt, decrypt
 from authentication import Authentication
 from client_to_biz_service_session import ClientToBizServiceSession
+from client_to_authentication_service_session import ClientToAuthenticationServiceSession
+from authentication_service_to_client_session import AuthenticationServiceToClientSession
 
-def request_tgt(client_id, client_ip, timestamp):
-    # Request TGT from AS
+def request_ticket_granting_service_ticket(client_id, client_ip, timestamp):
+    # Request ticket_granting_service_ticket from AS
     as_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     as_socket.connect(Config.AS_ADDRESS)
     
-    auth = Authentication(Config.CLIENT_KEY)
-    request = auth.generate_request(client_id, client_ip, timestamp)
+    request = ClientToAuthenticationServiceSession().generate_session(client_id, client_ip, timestamp)
 
     as_socket.send(request.encode('utf-8'))
     response = as_socket.recv(1024).decode('utf-8')
     as_socket.close()
-    print(f"Received TGT response: {response}")
+    print(f"Received ticket_granting_service_ticket response: {response}")
     
-    return auth.parse_request(response)
+    return Authentication(Config.CLIENT_KEY).parse_response(response)
 
-def request_service_ticket(tgt, client_id, session_key, server_name, client_ip):
+def request_service_ticket(ticket_granting_service_ticket, client_id, session_key, server_name, client_ip):
     # Create Authenticator
     timestamp = str(int(time.time()))
     authenticator = encrypt(session_key, f"{client_id},{client_ip},{str(timestamp)}")
@@ -29,7 +30,7 @@ def request_service_ticket(tgt, client_id, session_key, server_name, client_ip):
     # Request Service Ticket from TGS
     tgs_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     tgs_socket.connect(Config.TGS_ADDRESS)
-    tgs_request = f"{tgt},{server_name},{authenticator}"
+    tgs_request = f"{ticket_granting_service_ticket},{server_name},{authenticator}"
     tgs_socket.send(tgs_request.encode('utf-8'))
     response = tgs_socket.recv(1024).decode('utf-8')
     tgs_socket.close()
@@ -56,8 +57,8 @@ def main():
     client_ip = "192.168.1.100"  # Replace with actual client IP
     timestamp = str(int(time.time()))
 
-    # Step 1: Request TGT from AS
-    encrypted_tgt, timestamp, ct_session_key = request_tgt(client_id, client_ip, timestamp)
+    # Step 1: Request ticket_granting_service_ticket from AS
+    encrypted_ticket_granting_service_ticket, timestamp, ct_session_key = request_ticket_granting_service_ticket(client_id, client_ip, timestamp)
 
     # Check if the timestamp is within the acceptable range (e.g., 5 minutes)
     current_time = int(time.time())
@@ -66,7 +67,7 @@ def main():
         return
 
     # Step 2: Request Service Ticket from TGS
-    service_ticket_response = request_service_ticket(encrypted_tgt, client_id, ct_session_key, Config.SERVER_NAME, client_ip)
+    service_ticket_response = request_service_ticket(encrypted_ticket_granting_service_ticket, client_id, ct_session_key, Config.SERVER_NAME, client_ip)
     print(f"Received Service Ticket response: {service_ticket_response}")
     service_ticket, encrypted_response = service_ticket_response.split(',')
 
