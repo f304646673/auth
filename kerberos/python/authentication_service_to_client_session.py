@@ -11,5 +11,10 @@ class AuthenticationServiceToClientSession:
     
     def parse_session(self, encrypted_session):
         decrypted_session = decrypt(self.client_key, encrypted_session)
-        timestamp, ticket_granting_service_name, tgt_validity, client_to_ticket_granting_service_session_key = decrypted_session.split(',')
+        try:
+            timestamp, ticket_granting_service_name, tgt_validity, client_to_ticket_granting_service_session_key = decrypted_session.split(',')
+        except:
+            print("Error: Invalid session: ", decrypted_session)
+            return None, None, None, None
+        
         return timestamp, ticket_granting_service_name, tgt_validity, client_to_ticket_granting_service_session_key

@@ -39,9 +39,8 @@ class Authentication:
     def parse_response(self, response):
         encrypted_tgt, encrypted_session = response.split(',')
 
-        # Decrypt the second part of the response using the client key
-        timestamp, tgs_name, tgt_validity, ct_session_key = Authentication.Session(self.client_key).decrypt_session(encrypted_session)
-        print(f"Decrypted session: tgs_name={tgs_name}, tgt_validity={tgt_validity}, timestamp={timestamp}, ct_session_key={ct_session_key}")
+        timestamp, tgs_name, tgt_validity, ct_session_key = AuthenticationServiceToClientSession(self.client_key).parse_session(encrypted_session)
+        print(f'Parsed encrypted_session: {timestamp}, {tgs_name}, {tgt_validity}, {ct_session_key}')
 
         # Check if the timestamp is within the acceptable range (e.g., 5 minutes)
         current_time = int(time.time())
@@ -50,22 +49,6 @@ class Authentication:
             return None, None, None
         
         return encrypted_tgt, timestamp, ct_session_key
-        
-    class Session:
-        def __init__(self, client_key):
-            self.client_key = client_key
-            
-        def generate_encrypted_session(self, timestamp, tgs_name, tgt_validity, client_to_tgs_session_key):
-            return encrypt(self.client_key, f"{timestamp},{tgs_name},{tgt_validity},{client_to_tgs_session_key}")
-        
-        def decrypt_session(self, encrypted_session):
-            session = decrypt(self.client_key, encrypted_session)
-            try:
-                timestamp, tgs_name, tgt_validity, client_to_tgs_session_key = session.split(',')
-            except:
-                print("Error parsing session. Session: ", session)
-                return None, None, None, None
-            return timestamp, tgs_name, tgt_validity, client_to_tgs_session_key
 
 
         
