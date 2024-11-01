@@ -2,19 +2,19 @@
 import socket
 from config import Config
 from utils import decrypt
+from ticket_granting_ticket import TicketGrantingTicket
 
 def handle_client(client_socket):
     request = client_socket.recv(1024).decode('utf-8')
     print(f"Server received request: {request}")
-    encrypted_service_ticket, encrypted_server_request_part2 = request.split(',')
-    print(f"Service Ticket: {encrypted_service_ticket}, Authenticator: {encrypted_server_request_part2}")
+    encrypted_service_ticket, encrypted_session = request.split(',')
+    print(f"Service Ticket: {encrypted_service_ticket}, Authenticator: {encrypted_session}")
 
     # Decrypt Service Ticket
-    decrypted_ticket = decrypt(Config.SERVER_KEY, encrypted_service_ticket)
-    client_id, client_ip, server_name, timestamp, st_timestamp, cs_sk = decrypted_ticket.split(',')
+    client_id, client_ip, server_name, timestamp, st_timestamp, cs_sk = TicketGrantingTicket().parse_tgs_ticket(Config.SERVER_KEY, encrypted_service_ticket)
 
     # Decrypt Authenticator
-    decrypted_authenticator = decrypt(cs_sk, encrypted_server_request_part2)
+    decrypted_authenticator = decrypt(cs_sk, encrypted_session)
     client_id_from_authenticator , client_ip_from_authenticator, timestamp_from_authenticator, st_timestamp_from_authenticator = decrypted_authenticator.split(',')
 
     if client_id != client_id_from_authenticator or client_ip != client_ip_from_authenticator or timestamp != timestamp_from_authenticator:

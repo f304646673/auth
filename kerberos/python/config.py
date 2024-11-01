@@ -2,8 +2,9 @@
 class Config:
     CLIENT_KEY = "client_secret_k1"  # 16 bytes
     SERVER_KEY = "server_secret_k1"  # 16 bytes
-    CT_SK = "kdc_secret_key_t"    # 16 bytes
-    CS_SK = "kdc_secret_key_s"    # 16 bytes
+    CLIENT_TO_TGS_SESSION_KEY = "c_2_t_secret_key"    # 16 bytes
+    CLIENT_TO_SERVER_SESSION_KEY = "c_2_s_secret_key"    # 16 bytes
+    TGS_KEY = "tgs_secret_key__"  # 16
     AS_NAME = "AS"
     TGS_NAME = "TGS"
     SERVER_NAME = "BizServer"

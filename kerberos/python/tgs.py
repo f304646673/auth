@@ -2,6 +2,7 @@
 import socket
 import time
 from config import Config
+from ticket_granting_ticket import TicketGrantingTicket
 from utils import encrypt, decrypt
 
 def handle_tgs_request(client_socket):
@@ -16,8 +17,7 @@ def handle_tgs_request(client_socket):
         return
     
     # Decrypt TGT
-    decrypted_tgt = decrypt(Config.CT_SK, encrypted_tgt)
-    client_id, client_ip, timestamp, tgs_name, tgt_validity, session_key = decrypted_tgt.split(',')
+    client_id, client_ip, timestamp, tgs_name, tgt_validity, client_to_tgs_session_key = TicketGrantingTicket().parse_tgs_ticket(Config.TGS_KEY, encrypted_tgt)
 
     # Check if the timestamp is within the acceptable range (e.g., 5 minutes)
     current_time = int(time.time())
@@ -26,7 +26,7 @@ def handle_tgs_request(client_socket):
         client_socket.send("Authentication Failed".encode('utf-8'))
         return
     
-    decrypted_request = decrypt(session_key, encrypted_request)
+    decrypted_request = decrypt(client_to_tgs_session_key, encrypted_request)
     client_id_from_part2, client_ip_from_part2, timestamp_from_part2 = decrypted_request.split(',')
     
     if client_id != client_id_from_part2 or client_ip != client_ip_from_part2 or timestamp != timestamp_from_part2:
@@ -39,12 +39,11 @@ def handle_tgs_request(client_socket):
     st_timestamp = str(int(time.time()) + 60 * 10)
 
     # Generate Service Ticket
-    service_ticket_content = f"{client_id},{client_ip},{Config.SERVER_NAME},{timestamp},{st_timestamp},{Config.CS_SK}"
-    encrypted_service_ticket = encrypt(Config.SERVER_KEY, service_ticket_content)
+    encrypted_service_ticket = TicketGrantingTicket().generate_service_ticket(Config.SERVER_KEY, client_id, client_ip, Config.SERVER_NAME, timestamp, st_timestamp, Config.CLIENT_TO_SERVER_SESSION_KEY)
     
-    session_content = f"{timestamp},{st_timestamp},{Config.CS_SK}"
-    encrypted_session = encrypt(Config.CT_SK, session_content)
-    print("session_key:", Config.CT_SK)
+    session_content = f"{timestamp},{st_timestamp},{Config.CLIENT_TO_SERVER_SESSION_KEY}"
+    encrypted_session = encrypt(Config.CLIENT_TO_TGS_SESSION_KEY, session_content)
+    print("session_key:", Config.CLIENT_TO_TGS_SESSION_KEY)
 
     response = f'{encrypted_service_ticket},{encrypted_session}'
     print(f"TGS Response: {response}")

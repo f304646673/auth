@@ -8,7 +8,7 @@ def handle_as_request(client_socket):
     request = client_socket.recv(1024).decode('utf-8')
     print(f"AS Request received: {request}")
     
-    auth = authentication.Authentication(Config.CLIENT_KEY, Config.CT_SK, Config.TGS_NAME, 60 * 5)
+    auth = authentication.Authentication(Config.CLIENT_KEY, Config.CLIENT_TO_TGS_SESSION_KEY, Config.TGS_NAME, 60 * 5)
     response = auth.handle_request(request)
     
     print(f"AS Response: {response}")

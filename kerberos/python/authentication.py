@@ -1,4 +1,6 @@
 import time
+from config import Config
+import ticket_granting_ticket
 from utils import encrypt, decrypt
 
 class Authentication:
@@ -24,8 +26,8 @@ class Authentication:
         tgt_validity = int(time.time()) + 3600
         
         # Generate Ticket Granting Ticket (TGT)
-        tgt_content = f"{client_id},{client_ip},{timestamp},{self.tsg_name},{tgt_validity},{self.ct_session_key}"
-        encrypted_tgt = encrypt(self.ct_session_key, tgt_content)
+        encrypted_tgt = ticket_granting_ticket.TicketGrantingTicket().generate_tgs_ticket(
+            Config.TGS_KEY, client_id, client_ip, timestamp, self.tsg_name, tgt_validity, self.ct_session_key)
         
         # Generate Session Context
         encrypted_session = Authentication.Session(self.client_key).generate_encrypted_session(
