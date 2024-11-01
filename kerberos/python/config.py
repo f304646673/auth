@@ -2,12 +2,12 @@
 class Config:
     CLIENT_KEY = "client_secret_k1"  # 16 bytes
     SERVER_KEY = "server_secret_k1"  # 16 bytes
-    CLIENT_TO_TGS_SESSION_KEY = "c_2_t_secret_key"    # 16 bytes
+    CLIENT_TO_ticket_granting_service_SESSION_KEY = "c_2_t_secret_key"    # 16 bytes
     CLIENT_TO_BIZ_SERVICE_SESSION_KEY = "c_2_s_secret_key"    # 16 bytes
-    TGS_KEY = "tgs_secret_key__"  # 16
+    ticket_granting_service_KEY = "ticket_granting_service_secret_key__"  # 16
     AS_NAME = "AS"
-    TGS_NAME = "TGS"
+    ticket_granting_service_NAME = "ticket_granting_service"
     server_ip = "BizServer"
     AS_ADDRESS = ("localhost", 5000)
-    TGS_ADDRESS = ("localhost", 5001)
+    ticket_granting_service_ADDRESS = ("localhost", 5001)
     SERVER_ADDRESS = ("localhost", 5002)
