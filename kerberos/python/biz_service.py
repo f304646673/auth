@@ -3,6 +3,7 @@ import socket
 from config import Config
 from utils import decrypt
 from biz_service_ticket import BizServiceTicket
+from client_to_biz_service_session import ClientToBizServiceSession
 
 def handle_client(client_socket):
     request = client_socket.recv(1024).decode('utf-8')
@@ -11,15 +12,19 @@ def handle_client(client_socket):
     print(f"Service Ticket: {encrypted_service_ticket}, Authenticator: {encrypted_session}")
 
     # Decrypt Service Ticket
-    client_id, client_ip, server_name, timestamp, st_timestamp, cs_sk = BizServiceTicket(Config.SERVER_KEY).parse_tgs_ticket(encrypted_service_ticket)
+    client_id_from_biz_service_ticket, client_ip_from_biz_service_ticket, server_name_from_biz_service_ticket, \
+        timestamp_from_biz_service_ticket, st_timestamp_from_biz_service_ticket, client_to_biz_service_session_key \
+            = BizServiceTicket(Config.SERVER_KEY).parse_tgs_ticket(encrypted_service_ticket)
 
     # Decrypt Authenticator
-    decrypted_authenticator = decrypt(cs_sk, encrypted_session)
-    client_id_from_authenticator , client_ip_from_authenticator, timestamp_from_authenticator, st_timestamp_from_authenticator = decrypted_authenticator.split(',')
+    client_id_from_session , client_ip_from_session, timestamp_from_session, st_timestamp_from_authenticator = \
+        ClientToBizServiceSession(client_to_biz_service_session_key).parse_session(encrypted_session)
 
-    if client_id != client_id_from_authenticator or client_ip != client_ip_from_authenticator or timestamp != timestamp_from_authenticator:
-        print(f"Client ID: {client_id}, Client IP: {client_ip}, Timestamp: {timestamp}")
-        print(f"Client ID: {client_id_from_authenticator}, Client IP: {client_ip_from_authenticator}, Timestamp: {timestamp_from_authenticator}")
+    if client_id_from_biz_service_ticket != client_id_from_session \
+            or client_ip_from_biz_service_ticket != client_ip_from_session \
+            or timestamp_from_biz_service_ticket != timestamp_from_session:
+        print(f"Client ID: {client_id_from_biz_service_ticket}, Client IP: {client_ip_from_biz_service_ticket}, Timestamp: {timestamp_from_biz_service_ticket}")
+        print(f"Client ID: {client_id_from_session}, Client IP: {client_ip_from_session}, Timestamp: {timestamp_from_session}")
         response = "Authentication Failed"
         client_socket.send(response.encode('utf-8'))
         client_socket.close()
