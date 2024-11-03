@@ -1,6 +1,8 @@
 # client.py
 import socket
 import time
+import base64
+import rsa
 from config import Config
 from utils import encrypt, decrypt
 from authentication import Authentication
@@ -24,7 +26,7 @@ def access_authentication_service(client_name, client_ip, timestamp):
     
     return Authentication().parse_response(response)
 
-def access_ticket_granting_service(ticket_granting_service_ticket, client_name, client_to_ticket_granting_service_session_key, server_ip, client_ip):
+def access_ticket_granting_service(encrypted_ticket_granting_service_ticket_base64, client_name, client_to_ticket_granting_service_session_key, server_ip, client_ip):
     # Create Authenticator
     timestamp = str(int(time.time()))
     session = ClientToTicketGrantingServiceSession(client_to_ticket_granting_service_session_key).generate_session(client_name, client_ip, timestamp)
@@ -33,7 +35,7 @@ def access_ticket_granting_service(ticket_granting_service_ticket, client_name, 
     ticket_granting_service_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     ticket_granting_service_socket.connect(Config.ticket_granting_service_ADDRESS)
     
-    ticket_granting_service_request = f"{ticket_granting_service_ticket},{server_ip},{session}"
+    ticket_granting_service_request = f"{encrypted_ticket_granting_service_ticket_base64},{server_ip},{session}"
     ticket_granting_service_socket.send(ticket_granting_service_request.encode('utf-8'))
     response = ticket_granting_service_socket.recv(1024).decode('utf-8')
     
@@ -41,31 +43,32 @@ def access_ticket_granting_service(ticket_granting_service_ticket, client_name, 
     print(f"Received Service Ticket response: {response}")
     
     try:
-        encrypted_biz_service_ticket, encrypted_response = response.split(',')
+        encrypted_biz_service_ticket_base64, encrypted_session = response.split(',')
     except:
         print("Error parsing response from ticket_granting_service.Response: ", response)
         return None, None, None
     
-    decrypted_response = decrypt(client_to_ticket_granting_service_session_key, encrypted_response)
+    
+    print(f"client_to_ticket_granting_service_session_key: {client_to_ticket_granting_service_session_key}, encrypted_response: {encrypted_session}")
     try:
-        response_timestamp, st_validity, service_session_key = decrypted_response.split(',')
+        response_timestamp, st_validity, client_to_biz_service_session_key =  TicketGrantingServiceToClientSession(client_to_ticket_granting_service_session_key).parse_session(encrypted_session)
     except:
-        print("Error parsing decrypted response.Response: ", decrypted_response)
+        print("Error parsing decrypted encrypted_session: ", encrypted_session)
         return None, None, None
     
-    return encrypted_biz_service_ticket, service_session_key, st_validity
+    return encrypted_biz_service_ticket_base64, client_to_biz_service_session_key, st_validity
     
 
-def access_biz_service(biz_service_ticket, service_session_key, client_name, client_ip, st_validity):
+def access_biz_service(encrypted_biz_service_ticket_base64, client_to_biz_service_session_key, client_name, client_ip, st_validity):
     # Create Authenticator
     timestamp = str(int(time.time()))
-    session = ClientToBizServiceSession(service_session_key).generate_session(client_name, client_ip, timestamp, st_validity)
+    session = ClientToBizServiceSession(client_to_biz_service_session_key).generate_session(client_name, client_ip, timestamp, st_validity)
 
     # Send Service Ticket and Authenticator to Server
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.connect(Config.SERVER_ADDRESS)
     
-    server_request = f"{biz_service_ticket},{session}"
+    server_request = f"{encrypted_biz_service_ticket_base64},{session}"
     server_socket.send(server_request.encode('utf-8'))
     response = server_socket.recv(1024).decode('utf-8')
     
@@ -79,7 +82,8 @@ def main():
     timestamp = str(int(time.time()))
 
     # Step 1: Request ticket_granting_service_ticket from AS
-    encrypted_ticket_granting_service_ticket, timestamp, client_to_ticket_granting_service_session_key = access_authentication_service(client_name, client_ip, timestamp)
+    encrypted_ticket_granting_service_ticket_base64, timestamp, client_to_ticket_granting_service_session_key = \
+        access_authentication_service(client_name, client_ip, timestamp)
 
     # Check if the timestamp is within the acceptable range (e.g., 5 minutes)
     current_time = int(time.time())
@@ -88,8 +92,11 @@ def main():
         return
 
     # Step 2: Request Service Ticket from ticket_granting_service
-    encrypted_biz_service_ticket, service_session_key, st_validity = access_ticket_granting_service(encrypted_ticket_granting_service_ticket, client_name, client_to_ticket_granting_service_session_key, Config.server_ip, client_ip)
+    biz_service_ip = "172.0.0.2"
+    encrypted_biz_service_ticket, service_session_key, st_validity = \
+        access_ticket_granting_service(encrypted_ticket_granting_service_ticket_base64, client_name, client_to_ticket_granting_service_session_key, biz_service_ip, client_ip)
    
+    print(f"encrypted_biz_service_ticket: {encrypted_biz_service_ticket}, service_session_key: {service_session_key}, st_validity: {st_validity}")
     # Step 3: Access the service
     server_response = access_biz_service(encrypted_biz_service_ticket, service_session_key, client_name, client_ip, st_validity)
     print(f"Final Server response: {server_response}")

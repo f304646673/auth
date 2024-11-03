@@ -68,7 +68,7 @@ class Authentication:
             print("Timestamp difference is greater than 5 minutes. Authentication failed.")
             return None, None, None
         
-        return encrypted_ticket_granting_service_ticket, timestamp, client_to_ticket_granting_service_session_key
+        return encrypted_ticket_granting_service_ticket_base64, timestamp, client_to_ticket_granting_service_session_key
 
 
         

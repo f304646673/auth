@@ -7,7 +7,6 @@ class Config:
     ticket_granting_service_KEY = "ticket_granting_service_secret_key__"  # 16
     AS_NAME = "AS"
     ticket_granting_service_NAME = "ticket_granting_service"
-    server_ip = "BizServer"
     AS_ADDRESS = ("localhost", 5000)
     ticket_granting_service_ADDRESS = ("localhost", 5001)
     SERVER_ADDRESS = ("localhost", 5002)

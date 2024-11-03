@@ -1,4 +1,7 @@
------BEGIN RSA PRIVATE KEY-----
+class BizServiceStorage:
+    def __init__(self):
+        self.private_key = self.private_key = \
+"""-----BEGIN RSA PRIVATE KEY-----
 MIIEowIBAAKCAQEAooS2Wv0+lE3WvadoqXpvRQftiecerPIZxjx1PhbT60+5fN6S
 Kep4X/KtyEHE6ZB6T9VW1t2q78HUq/ujMrzqHGmHnDQRhq621CnusKw3OwAG5hSF
 ikY7vjfFMDjwpKt0+DGhDrX5Pe8cAgFsyswjjpvhHpdd4u4Invj4QQY6JJPjJeCq
@@ -24,11 +27,8 @@ tvDY9ejj5+4JirgdWHEnEwRWzzjPnmRmfmRhhCxVHIDAACwefK+6rg2h6cMvp2Sh
 J95SFQKBgGBa4fzEiGS2vcekB315rnrgCMeSSqcr8dcTUCbMKMdKtK2dNLxXlaLR
 +MVdaGQLBI9+StmQfl7gA1l7gtpb3JjMeczhYiSXeX0fvDw7B+W7c+lmkn246P7H
 Uh31tRl8w9mUu6oKoaWNF0ARpPnJ5FuzBdst6F0SjTsKdz5+WNJx
------END RSA PRIVATE KEY-----
-
-
------BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAooS2Wv0+lE3WvadoqXpv\nRQftiecerPIZxjx1PhbT60+5fN6SKep4X/KtyEHE6ZB6T9VW1t2q78HUq/ujMrzq\nHGmHnDQRhq621CnusKw3OwAG5hSFikY7vjfFMDjwpKt0+DGhDrX5Pe8cAgFsyswj\njpvhHpdd4u4Invj4QQY6JJPjJeCqJx6o37MjEIVDVU/oNXzpElQEYbZmBFwDIJBB\n/BR0zS6InhwTxZh5vrELWt4HWSTJKuAg+5dZbMqs0I6nMDi+JspkOZtnGIU704V+\n0ocDEA0Ar0vQQm1CceAnJlerDuAvKaXbsyj5wFmmYf4vvh5S2nTS1N06Zrv0gTgk\nSQIDAQAB\n-----END PUBLIC KEY-----
-
------BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAooS2Wv0+lE3WvadoqXpv\nRQftiecerPIZxjx1PhbT60+5fN6SKep4X/KtyEHE6ZB6T9VW1t2q78HUq/ujMrzq\nHGmHnDQRhq621CnusKw3OwAG5hSFikY7vjfFMDjwpKt0+DGhDrX5Pe8cAgFsyswj\njpvhHpdd4u4Invj4QQY6JJPjJeCqJx6o37MjEIVDVU/oNXzpElQEYbZmBFwDIJBB\n/BR0zS6InhwTxZh5vrELWt4HWSTJKuAg+5dZbMqs0I6nMDi+JspkOZtnGIU704V+\n0ocDEA0Ar0vQQm1CceAnJlerDuAvKaXbsyj5wFmmYf4vvh5S2nTS1N06Zrv0gTgk\nSQIDAQAB\n-----END PUBLIC KEY-----
-
------BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAooS2Wv0+lE3WvadoqXpv\nRQftiecerPIZxjx1PhbT60+5fN6SKep4X/KtyEHE6ZB6T9VW1t2q78HUq/ujMrzq\nHGmHnDQRhq621CnusKw3OwAG5hSFikY7vjfFMDjwpKt0+DGhDrX5Pe8cAgFsyswj\njpvhHpdd4u4Invj4QQY6JJPjJeCqJx6o37MjEIVDVU/oNXzpElQEYbZmBFwDIJBB\n/BR0zS6InhwTxZh5vrELWt4HWSTJKuAg+5dZbMqs0I6nMDi+JspkOZtnGIU704V+\n0ocDEA0Ar0vQQm1CceAnJlerDuAvKaXbsyj5wFmmYf4vvh5S2nTS1N06Zrv0gTgk\nSQIDAQAB\n-----END PUBLIC KEY-----
+-----END RSA PRIVATE KEY-----"""
+    
+    def get_private_key(self):
+        return self.private_key
+    
