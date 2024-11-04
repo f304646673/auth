@@ -4,12 +4,12 @@ from Crypto.Random import get_random_bytes
 
 def generate_key_pair():
     """
-    生成RSA私钥和多个公钥
+    生成RSA私钥和公钥
     """
     key = RSA.generate(2048)
     private_key = key.export_key()
-    public_keys = [key.publickey().export_key() for _ in range(3)]  # 生成3个公钥
-    return private_key, public_keys
+    public_key = key.publickey().export_key()
+    return private_key, public_key
 
 def encrypt_rsa(public_key, message):
     """
@@ -30,9 +30,9 @@ def decrypt_rsa(private_key, encrypted_message):
     return decrypted_message.decode('utf-8')
 
 # # 示例用法
-# if __name__ == "__main__":
-#     # 生成密钥对
-#     for i in range(3):
-#         private_key, public_keys = generate_key_pair()
-#         print(f"Private key: \n {private_key.decode()}\n, Public keys: \n{[key.decode() for key in public_keys]}")
+if __name__ == "__main__":
+    # 生成密钥对
+    for i in range(3):
+        private_key, public_key = generate_key_pair()
+        print(f"Private key: \n{private_key.decode()}\n, Public key: \n{public_key.decode()}")
     

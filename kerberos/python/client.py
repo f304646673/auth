@@ -62,13 +62,13 @@ def access_ticket_granting_service(encrypted_ticket_granting_service_ticket_base
 def access_biz_service(encrypted_biz_service_ticket_base64, client_to_biz_service_session_key, client_name, client_ip, st_validity):
     # Create Authenticator
     timestamp = str(int(time.time()))
-    session = ClientToBizServiceSession(client_to_biz_service_session_key).generate_session(client_name, client_ip, timestamp, st_validity)
+    encrypted_client_to_biz_service_session = ClientToBizServiceSession(client_to_biz_service_session_key).generate_session(client_name, client_ip, timestamp, st_validity)
 
     # Send Service Ticket and Authenticator to Server
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.connect(Config.SERVER_ADDRESS)
     
-    server_request = f"{encrypted_biz_service_ticket_base64},{session}"
+    server_request = f"{encrypted_biz_service_ticket_base64},{encrypted_client_to_biz_service_session}"
     server_socket.send(server_request.encode('utf-8'))
     response = server_socket.recv(1024).decode('utf-8')
     

@@ -10,19 +10,21 @@ import base64
 def handle_client(client_socket):
     request = client_socket.recv(1024).decode('utf-8')
     print(f"Server received request: {request}")
-    encrypted_biz_service_ticket_base64, client_to_biz_service_session_key = request.split(',')
-    print(f"Service Ticket: {encrypted_biz_service_ticket_base64}, Authenticator: {client_to_biz_service_session_key}")
+    encrypted_biz_service_ticket_base64, encrypted_client_to_biz_service_session = request.split(',')
+    print(f"Service Ticket: {encrypted_biz_service_ticket_base64}, Authenticator: {encrypted_client_to_biz_service_session}")
 
     storage = BizServiceStorage()
     # Decrypt Service Ticket
     encrypted_biz_service_ticket = base64.b64decode(encrypted_biz_service_ticket_base64)
+    print(f'Encrypted Biz Service Ticket: {encrypted_biz_service_ticket}')
     client_name_from_biz_service_ticket, client_ip_from_biz_service_ticket, server_ip_from_biz_service_ticket, \
         timestamp_from_biz_service_ticket, st_timestamp_from_biz_service_ticket, client_to_biz_service_session_key \
             = BizServiceTicket(storage.get_private_key()).parse_service_ticket(encrypted_biz_service_ticket)
 
     # Decrypt Authenticator
+    print(f'Client to Biz Service Session Key: {client_to_biz_service_session_key}')
     client_name_from_session , client_ip_from_session, timestamp_from_session, st_timestamp_from_authenticator = \
-        ClientToBizServiceSession(client_to_biz_service_session_key).parse_session(client_to_biz_service_session_key)
+        ClientToBizServiceSession(client_to_biz_service_session_key).parse_session(encrypted_client_to_biz_service_session)
 
     if client_name_from_biz_service_ticket != client_name_from_session \
             or client_ip_from_biz_service_ticket != client_ip_from_session \

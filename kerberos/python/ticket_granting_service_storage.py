@@ -1,6 +1,16 @@
 class TicketGrantingServiceStorage:
     def __init__(self):
-        self.biz_service_to_public_key = {"172.0.0.2": "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAozWyFugyFlMkmFuocYGl\njy6hdkl1AfPV88fIDXyYycEQ4wwkXeFnjQdJiBQUui8mppPmqV0/yYR9uQC45A9T\nhHLJm0wVPHwhuU4iyFywAxMJhJoCZevhqbIBBX0+d0s6E/AgPgYeCzAVEh3BYgd6\nfrV+CQAqVst2bE0OLSdOR3Qp3uoyIO+YLwziUasuSebG3ofkmzMSeIf1GDziYKph\nosZ1vzbZC30EBUcd7hZi7Y3xrk3p0z3udVvxLU+c94iTpcWtU3QJtDqQOFcvSfje\nZXryDCDYPH+A2ZwM3wAetg/bDmdbnVMgj37gOP75UQ2/Nd4lACvrAXfLE6fOOpkb\nRQIDAQAB\n-----END PUBLIC KEY-----"}
+        self.biz_service_to_public_key = {"172.0.0.2": \
+"""-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAtbvpNwwPaoriXqOWHS9i
+stH1l8Bhcu9anbG/CqCWKIwfCDyAxg2VUlyfMJbVoAdte9EFSyEIMlcyHn+pZGEb
+EczcyRzOiD51/A3kfGbDjkl2VayCA9cYfTenq4Fs9iHD+a1pDmDiCCcgy1Mx8MWR
+Vt7L/GdlOvNxscTWTKoW8nKUv08fy9XppsTFwZOWKWBJmnbqxIM80hiGxyoVfO4A
+KI2liaTT5j/YGVZNKYxE2++mwBKydnstfNPtDu5IpCfDAwkL81pvDPCkuEa8O4NA
+oYZ+nefA80qZjscd4aX/UxWuS0wxyPQWdSRq84WX33r6s3Ap20JO2Vk5zUS1hie5
+DQIDAQAB
+-----END PUBLIC KEY-----"""}
+        
         self.private_key = \
 """-----BEGIN RSA PRIVATE KEY-----
 MIIEpQIBAAKCAQEAt16rg6ibrntgDfPPsOqtBMWA40+5m6FKWMqUV6cchyp7hmqa
