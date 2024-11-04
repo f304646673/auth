@@ -14,7 +14,7 @@ class Authentication:
     @staticmethod
     def handle_request(request, client_to_ticket_granting_service_session_key, expires = 30):
         try:
-            client_name, client_ip, timestamp =  ClientToAuthenticationServiceSession().parse_session(request)
+            client_name, client_ip, client_to_authentication_service_timestamp =  ClientToAuthenticationServiceSession().parse_session(request)
         except:
             print("Error parsing request from client.Request: ", request)
             return None
@@ -26,19 +26,20 @@ class Authentication:
             print("User not found.")
             return None
         
-        ticket_granting_service_ticket_validity = int(time.time()) + expires
+        authentication_service_to_client_timestamp = int(time.time())
+        ticket_granting_service_ticket_validity = authentication_service_to_client_timestamp + expires
         
         ticket_granting_service_name, ticket_granting_service_public_key = storage.select_one_ticket_granting_service_and_public_key()
         
         # Generate Ticket Granting Ticket (ticket_granting_service_ticket)
         encrypted_ticket_granting_service_ticket = TicketGrantingServiceTicket(ticket_granting_service_public_key).generate_ticket_granting_service_ticket(
-            client_name, client_ip, timestamp, ticket_granting_service_name, ticket_granting_service_ticket_validity, client_to_ticket_granting_service_session_key)
+            client_name, client_ip, authentication_service_to_client_timestamp, ticket_granting_service_name, ticket_granting_service_ticket_validity, client_to_ticket_granting_service_session_key)
         
         encrypted_ticket_granting_service_ticket_base64 = base64.b64encode(encrypted_ticket_granting_service_ticket).decode('utf-8')
         
         # Generate Session Context
         encrypted_session = AuthenticationServiceToClientSession(user_public_key).generate_session(
-            timestamp, ticket_granting_service_name, ticket_granting_service_ticket_validity, client_to_ticket_granting_service_session_key)
+            authentication_service_to_client_timestamp, ticket_granting_service_name, ticket_granting_service_ticket_validity, client_to_ticket_granting_service_session_key)
         
         encrypted_session_base64 = base64.b64encode(encrypted_session).decode('utf-8')
         
@@ -58,17 +59,17 @@ class Authentication:
         print(f'Parsed encrypted_session: {encrypted_session}')
         print(f'Parsed private_key: {private_key}')
         
-        timestamp, ticket_granting_service_name, ticket_granting_service_ticket_validity, client_to_ticket_granting_service_session_key \
+        authentication_service_to_client_timestamp, ticket_granting_service_name, ticket_granting_service_ticket_validity, client_to_ticket_granting_service_session_key \
             = AuthenticationServiceToClientSession(private_key).parse_session(encrypted_session)
-        print(f'Parsed encrypted_session: {timestamp}, {ticket_granting_service_name}, {ticket_granting_service_ticket_validity}, {client_to_ticket_granting_service_session_key}')
+        print(f'Parsed encrypted_session: {authentication_service_to_client_timestamp}, {ticket_granting_service_name}, {ticket_granting_service_ticket_validity}, {client_to_ticket_granting_service_session_key}')
 
         # Check if the timestamp is within the acceptable range (e.g., 5 minutes)
         current_time = int(time.time())
-        if int(timestamp) < current_time:
+        if int(authentication_service_to_client_timestamp) < current_time:
             print("Timestamp difference is greater than 5 minutes. Authentication failed.")
             return None, None, None
         
-        return encrypted_ticket_granting_service_ticket_base64, timestamp, client_to_ticket_granting_service_session_key
+        return encrypted_ticket_granting_service_ticket_base64, authentication_service_to_client_timestamp, client_to_ticket_granting_service_session_key
 
 
         
