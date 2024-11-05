@@ -1,5 +1,5 @@
 # app.py
-from flask import Flask, redirect, request, session, url_for, render_template, jsonify
+from flask import Flask, redirect, request, authenticator, url_for, render_template, jsonify
 from auth import WeChatAuth
 
 app = Flask(__name__)
@@ -21,12 +21,12 @@ def callback():
         return "Error: No code provided", 400
 
     user_info = WeChatAuth.get_user_info(code)
-    session['user_info'] = user_info
+    authenticator['user_info'] = user_info
     return redirect(url_for('profile'))
 
 @app.route('/profile')
 def profile():
-    user_info = session.get('user_info')
+    user_info = authenticator.get('user_info')
     if not user_info:
         return redirect(url_for('login'))
     return f"User Info: {user_info}"

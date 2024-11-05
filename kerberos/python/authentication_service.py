@@ -19,8 +19,8 @@ def handle_as_request(client_socket):
     print(f"AS Request received: {request}")
     
     # 生成随机的16个字符的字符串作为会话密钥
-    client_to_ticket_granting_service_session_key = generate_random_key()
-    response = Authentication().handle_request(request, client_to_ticket_granting_service_session_key)
+    client_to_ticket_granting_service_authenticator_key = generate_random_key()
+    response = Authentication().handle_request(request, client_to_ticket_granting_service_authenticator_key)
     
     print(f"AS Response: {response}")
     client_socket.send(response.encode('utf-8'))
