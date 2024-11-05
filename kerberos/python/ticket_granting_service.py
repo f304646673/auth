@@ -1,8 +1,6 @@
 # ticket_granting_service.py
 import socket
 import time
-import random
-import string
 from config import Config
 from biz_service_ticket import BizServiceTicket
 from ticket_granting_service_ticket import TicketGrantingServiceTicket
@@ -10,16 +8,8 @@ from ticket_granting_service_to_client_authenticator import TicketGrantingServic
 from client_to_authentication_service_authenticator import ClientToAuthenticationServiceAuthenticator
 from client_to_ticket_granting_service_authenticator import ClientToTicketGrantingServiceAuthenticator
 from ticket_granting_service_storage import TicketGrantingServiceStorage
-from utils import encrypt, decrypt
+from utils import encrypt, decrypt, generate_random_key
 import base64
-
-def generate_random_key(length=16):
-    """
-    生成一个随机的16个字符的字符串
-    """
-    characters = string.ascii_letters + string.digits
-    random_key = ''.join(random.choice(characters) for i in range(length))
-    return random_key
 
 def handle_ticket_granting_service_request(client_socket):
     request = client_socket.recv(1024).decode('utf-8')
