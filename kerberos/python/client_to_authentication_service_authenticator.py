@@ -7,5 +7,10 @@ class ClientToAuthenticationServiceAuthenticator:
         return authenticator_content
     
     def parse_authenticator(self, authenticator_content):
-        client_name, client_ip, timestamp = authenticator_content.split(',')
+        try:
+            client_name, client_ip, timestamp = authenticator_content.split(',')
+        except:
+            print("Error: Invalid authenticator: ", authenticator_content)
+            return None, None, None
+        
         return client_name, client_ip, timestamp

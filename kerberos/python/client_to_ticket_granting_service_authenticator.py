@@ -13,7 +13,7 @@ class ClientToTicketGrantingServiceAuthenticator:
         decrypted_authenticator = decrypt(self.client_to_ticket_granting_service_authenticator_key, encrypted_authenticator)
         try:
             client_name, client_ip, client_to_ticket_granting_service_timestamp = decrypted_authenticator.split(',')
-        except ValueError:
+        except:
             print("Error: Invalid authenticator: ", decrypted_authenticator)
             return None, None, None
         return client_name, client_ip, client_to_ticket_granting_service_timestamp

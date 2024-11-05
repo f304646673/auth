@@ -12,5 +12,12 @@ class TicketGrantingServiceTicket:
 
     def parse_ticket_granting_service_ticket(self, encrypted_ticket_granting_ticket):
         decrypted_ticket_granting_service_ticket = rsa.decrypt_rsa(self.ticket_granting_service_key, encrypted_ticket_granting_ticket)
-        client_name, client_ip, timestamp, ticket_granting_service_name, ticket_granting_ticket_validity, client_to_ticket_granting_service_authenticator_key = decrypted_ticket_granting_service_ticket.split(',')
-        return client_name, client_ip, timestamp, ticket_granting_service_name, ticket_granting_ticket_validity, client_to_ticket_granting_service_authenticator_key
+        try:
+            client_name, client_ip, timestamp, ticket_granting_service_name, ticket_granting_ticket_validity,\
+                client_to_ticket_granting_service_authenticator_key = decrypted_ticket_granting_service_ticket.split(',')
+        except:
+            print("Error: Invalid ticket granting service ticket: ", decrypted_ticket_granting_service_ticket)
+            return None, None, None, None, None, None
+        
+        return client_name, client_ip, timestamp, ticket_granting_service_name, ticket_granting_ticket_validity,\
+                client_to_ticket_granting_service_authenticator_key

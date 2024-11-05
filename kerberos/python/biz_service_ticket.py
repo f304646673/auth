@@ -13,6 +13,11 @@ class BizServiceTicket:
     
     def parse_service_ticket(self, encrypted_st):
         decrypted_st = rsa.decrypt_rsa(self.server_key, encrypted_st)
-        client_name, client_ip, server_ip, timestamp, st_validity, client_to_server_authenticator_key = decrypted_st.split(',')
+        try:
+            client_name, client_ip, server_ip, timestamp, st_validity, client_to_server_authenticator_key = decrypted_st.split(',')
+        except:
+            print("Error: Invalid service ticket: ", decrypted_st)
+            return None, None, None, None, None, None
+        
         return client_name, client_ip, server_ip, timestamp, st_validity, client_to_server_authenticator_key
         

@@ -29,16 +29,30 @@ def handle_client(client_socket):
         client_socket.send(response.encode('utf-8'))
         client_socket.close()
         return
+    
+    current_timestamp = int(time.time())
+    if current_timestamp - int(ticket_granting_service_to_client_timestamp_from_ticket) > 60 * 5:
+        print("Timestamp difference is greater than 5 minutes. Authentication failed.")
+        response = "Authentication Failed"
+        client_socket.send(response.encode('utf-8'))
+        client_socket.close()
+        return
 
     # Decrypt Authenticator
-    client_name_from_authenticator , client_ip_from_authenticator, \
-    ticket_granting_service_to_client_timestamp_from_authenticator, biz_service_ticket_validity_from_authenticator = \
+    client_name_from_authenticator, client_ip_from_authenticator, \
+    client_to_biz_service_timestamp_from_authenticator, biz_service_ticket_validity_from_authenticator = \
         ClientToBizServiceAuthenticator(client_to_biz_service_authenticator_key).parse_authenticator(encrypted_client_to_biz_service_authenticator)
 
     if client_name_from_ticket != client_name_from_authenticator \
             or client_ip_from_ticket != client_ip_from_authenticator \
-            or ticket_granting_service_to_client_timestamp_from_ticket != ticket_granting_service_to_client_timestamp_from_authenticator\
             or biz_service_ticket_validity_from_ticket != biz_service_ticket_validity_from_authenticator:
+        response = "Authentication Failed"
+        client_socket.send(response.encode('utf-8'))
+        client_socket.close()
+        return
+    
+    if current_timestamp - int(client_to_biz_service_timestamp_from_authenticator) > 60 * 5:
+        print("Service Ticket expired.")
         response = "Authentication Failed"
         client_socket.send(response.encode('utf-8'))
         client_socket.close()

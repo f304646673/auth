@@ -54,7 +54,11 @@ class Authentication:
     # Parse the response from the server
     @staticmethod
     def parse_response(response, key):
-        encrypted_ticket_granting_service_ticket_base64, encrypted_authenticator_base64 = response.split(',')
+        try:
+            encrypted_ticket_granting_service_ticket_base64, encrypted_authenticator_base64 = response.split(',')
+        except:
+            print("Error parsing response from authentication_service.Response: ", response)
+            return None, None, None, None, None, None
         
         encrypted_authenticator = base64.b64decode(encrypted_authenticator_base64)
         

@@ -12,5 +12,11 @@ class TicketGrantingServiceToClientAuthenticator:
     
     def parse_authenticator(self, encrypted_authenticator):
         decrypted_authenticator = decrypt(self.ticket_granting_service_authenticator_key, encrypted_authenticator)
-        ticket_granting_service_to_client_timestamp, biz_service_ticket_validity, client_to_biz_service_authenticator_key = decrypted_authenticator.split(',')
+        try:
+            ticket_granting_service_to_client_timestamp, biz_service_ticket_validity, \
+                client_to_biz_service_authenticator_key = decrypted_authenticator.split(',')
+        except:
+            print("Error: Invalid authenticator: ", decrypted_authenticator)
+            return None, None, None
+        
         return ticket_granting_service_to_client_timestamp, biz_service_ticket_validity, client_to_biz_service_authenticator_key
