@@ -3,7 +3,7 @@ import requests
 import time
 import hashlib
 from flask import request
-from config import Config
+
 
 class WeChatAuth:
     @staticmethod

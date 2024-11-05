@@ -1,18 +1,9 @@
 # as.py
 import socket
-import time
-import random
-import string
 from config import Config
+from utils import generate_random_key
 from authentication import Authentication
 
-def generate_random_key(length=16):
-    """
-    生成一个随机的16个字符的字符串
-    """
-    characters = string.ascii_letters + string.digits
-    random_key = ''.join(random.choice(characters) for i in range(length))
-    return random_key
 
 def handle_as_request(client_socket):
     request = client_socket.recv(1024).decode('utf-8')

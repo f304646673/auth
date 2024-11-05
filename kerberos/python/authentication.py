@@ -1,5 +1,4 @@
 import time
-from config import Config
 from ticket_granting_service_ticket import TicketGrantingServiceTicket
 from utils import encrypt, decrypt
 from client_to_authentication_service_authenticator import ClientToAuthenticationServiceAuthenticator
