@@ -11,6 +11,8 @@ from ticket_granting_service_storage import TicketGrantingServiceStorage
 from utils import encrypt, decrypt, generate_random_key
 import base64
 
+SERVER_NAME = "ticket_granting_service"
+
 def handle_ticket_granting_service_request(client_socket):
     request = client_socket.recv(1024).decode('utf-8')
     print(f"ticket_granting_service Request received: {request}")
@@ -29,44 +31,51 @@ def handle_ticket_granting_service_request(client_socket):
     private_key = TicketGrantingServiceStorage().get_private_key()
     
     # Decrypt ticket_granting_service_ticket
-    client_name_from_ticket_granting_service_ticket, client_ip_from_ticket_granting_service_ticket, \
-        authentication_service_to_client_timestamp_from_ticket_granting_service_ticket, ticket_granting_service_name_from_ticket_granting_service_ticket, \
-        ticket_granting_service_ticket_validity_from_ticket_granting_service_ticket, client_to_ticket_granting_service_authenticator_key \
+    client_name_from_ticket, client_ip_from_ticket, \
+        authentication_service_to_client_timestamp_from_ticket, ticket_granting_service_name_from_ticket, \
+        ticket_granting_service_ticket_validity_from_ticket, client_to_ticket_granting_service_authenticator_key \
         = TicketGrantingServiceTicket(private_key).parse_ticket_granting_service_ticket(encrypted_ticket_granting_service_ticket)
 
-    # Check if the timestamp is within the acceptable range
-    ticket_granting_service_to_client_timestamp = int(time.time())
-    if ticket_granting_service_to_client_timestamp > int(ticket_granting_service_ticket_validity_from_ticket_granting_service_ticket):
-        print("Authentication failed.")
+    if SERVER_NAME != ticket_granting_service_name_from_ticket:
+        print(f"Server name mismatch. Actual: {ticket_granting_service_name_from_ticket}")
         client_socket.send("Authentication Failed".encode('utf-8'))
+        client_socket.close()
+        return
+
+    # Check if the timestamp is within the acceptable range
+    current_timestamp = int(time.time())
+    if current_timestamp > int(ticket_granting_service_ticket_validity_from_ticket):
+        print("Authentication Failed.Ticket expired.")
+        client_socket.send("Authentication Failed. Ticket expired.".encode('utf-8'))
         return
     
     client_name_from_authenticator, client_ip_from_authenticator, client_to_ticket_granting_service_timestamp \
         = ClientToTicketGrantingServiceAuthenticator(client_to_ticket_granting_service_authenticator_key).parse_authenticator(client_to_ticket_granting_service_authenticator)
     
-    if client_name_from_ticket_granting_service_ticket != client_name_from_authenticator or client_ip_from_ticket_granting_service_ticket != client_ip_from_authenticator:
-        print(f"Client ID: {client_name_from_ticket_granting_service_ticket}, Client IP: {client_ip_from_ticket_granting_service_ticket}, Timestamp: {authentication_service_to_client_timestamp_from_ticket_granting_service_ticket}")
+    if client_name_from_ticket != client_name_from_authenticator or client_ip_from_ticket != client_ip_from_authenticator:
+        print(f"Client ID: {client_name_from_ticket}, Client IP: {client_ip_from_ticket}, Timestamp: {authentication_service_to_client_timestamp_from_ticket}")
         print(f"Client ID: {client_name_from_authenticator}, Client IP: {client_ip_from_authenticator}, Timestamp: {client_to_ticket_granting_service_timestamp}")
         client_socket.send("Authentication Failed".encode('utf-8'))
         client_socket.close()
         return
     
-    ticket_granting_service_to_client_timestamp = int(time.time())
+    ticket_granting_service_to_client_timestamp = current_timestamp
     
     biz_service_ticket_validity = ticket_granting_service_to_client_timestamp + 60 * 10
 
     # Generate biz Service Ticket
     client_to_biz_service_authenticator_key = generate_random_key()
-    encrypted_biz_service_ticket = BizServiceTicket(storage.get_biz_service_public_key(server_ip)).generate_service_ticket(client_name_from_ticket_granting_service_ticket, client_ip_from_ticket_granting_service_ticket, 
-                                                                                           server_ip, ticket_granting_service_to_client_timestamp, biz_service_ticket_validity, 
-                                                                                           client_to_biz_service_authenticator_key)
+    encrypted_biz_service_ticket = \
+        BizServiceTicket(storage.get_biz_service_public_key(server_ip)).generate_service_ticket(
+            client_name_from_ticket, client_ip_from_ticket, server_ip, ticket_granting_service_to_client_timestamp, 
+            biz_service_ticket_validity, client_to_biz_service_authenticator_key)
+        
     encrypted_biz_service_ticket_base64 = base64.b64encode(encrypted_biz_service_ticket).decode('utf-8')
     
     # Generate Authenticator Context
-    client_to_ticket_granting_service_authenticator = TicketGrantingServiceToClientAuthenticator(client_to_ticket_granting_service_authenticator_key).generate_authenticator(ticket_granting_service_to_client_timestamp, biz_service_ticket_validity, client_to_biz_service_authenticator_key)
-    print("authenticator_key:", client_to_ticket_granting_service_authenticator_key)
-    
-    print(f'encrypted_service_ticket: {encrypted_biz_service_ticket}, encrypted_authenticator: {client_to_ticket_granting_service_authenticator}')
+    client_to_ticket_granting_service_authenticator = \
+        TicketGrantingServiceToClientAuthenticator(client_to_ticket_granting_service_authenticator_key).generate_authenticator(
+            ticket_granting_service_to_client_timestamp, biz_service_ticket_validity, client_to_biz_service_authenticator_key)
 
     response = f'{encrypted_biz_service_ticket_base64},{client_to_ticket_granting_service_authenticator}'
     print(f"ticket_granting_service Response: {response}")

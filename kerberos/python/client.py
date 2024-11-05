@@ -3,6 +3,7 @@ import socket
 import time
 from config import Config
 from utils import encrypt, decrypt
+from client_storage import ClientStorage
 from authentication import Authentication
 from client_to_biz_service_authenticator import ClientToBizServiceAuthenticator
 from client_to_authentication_service_authenticator import ClientToAuthenticationServiceAuthenticator
@@ -29,14 +30,20 @@ def access_authentication_service(client_name, client_ip):
     print(f"Received ticket_granting_service_ticket response: {response}")
     
     encrypted_ticket_granting_service_ticket_base64, authentication_service_to_client_timestamp, \
-        client_to_ticket_granting_service_authenticator_key = Authentication().parse_response(response)
+            ticket_granting_service_name, ticket_granting_service_ticket_validity, client_to_ticket_granting_service_authenticator_key = \
+            Authentication().parse_response(response, ClientStorage().get_private_key())
 
-    # Check if the timestamp is within the acceptable range (e.g., 5 minutes)
     if int(authentication_service_to_client_timestamp) - client_to_authentication_service_timestamp > 60 * 5:
         print("Timestamp difference is greater than 5 minutes. Authentication failed.")
-        return None, None
+        return None
     
-    return encrypted_ticket_granting_service_ticket_base64, client_to_ticket_granting_service_authenticator_key
+    current_time = int(time.time())
+    if current_time > int(ticket_granting_service_ticket_validity):
+        print("Authentication Failed. Ticket expired.")
+        return None
+    
+    return encrypted_ticket_granting_service_ticket_base64, \
+         client_to_ticket_granting_service_authenticator_key, ticket_granting_service_name
 
 # Request a ticket of the biz_service from the ticket_granting_service
 def access_ticket_granting_service( encrypted_ticket_granting_service_ticket_base64, 
@@ -113,10 +120,10 @@ def main():
     client_ip = "192.168.1.100"  # Replace with actual client IP
 
     # Step 1: Request a ticket of ticket_granting_service from the authentication_service
-    encrypted_ticket_granting_service_ticket_base64, client_to_ticket_granting_service_authenticator_key = \
+    encrypted_ticket_granting_service_ticket_base64, client_to_ticket_granting_service_authenticator_key, ticket_granting_service_name = \
         access_authentication_service(client_name, client_ip)
 
-    # Step 2: Request a ticket of the biz_service from the ticket_granting_service
+    # Step 2: Request a ticket of the biz_service from the ticket_granting_service where the ticket_granting_service_name is the server name
     biz_service_ip = "172.0.0.2"
     encrypted_biz_service_ticket_base64, client_to_biz_service_authenticator_key, biz_service_ticket_validity = \
         access_ticket_granting_service(encrypted_ticket_granting_service_ticket_base64,
